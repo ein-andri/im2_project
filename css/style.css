@@ -1,11 +1,32 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0 0;
+  padding: 0 0;
+  box-sizing: border-box;
+  font-family: Inter, sans-serif;
 }
-
-
-body {
-    background-color: pink;
+main {
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 190, 11, 0.16);
 }
-
+button {
+  appearance: none;
+  cursor: pointer;
+  border: none;
+  background: #ffbe0b;
+  padding: 20px 45px;
+  border-radius: 9999px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  transition: box-shadow 333ms;
+}
+button:hover {
+  box-shadow:
+    rgba(17, 17, 26, 0.1) 0px 4px 16px,
+    rgba(17, 17, 26, 0.1) 0px 8px 24px,
+    rgba(17, 17, 26, 0.1) 0px 16px 56px;
+}
