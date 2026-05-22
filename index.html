@@ -5,28 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Swiss Flight Recap</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div class="website">
       <div class="sidebar">
-        <div class="green-box"></div>
-        <div class="green-box"></div>
-        <div class="green-box"></div>
-      </div>
+        <div class="green-box">
+          <h2>ZRH - Airport</h2>
+          <table class="flight-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Arrival in</th>
+              </tr>
+            </thead>
 
+            <tbody id="flight-table-body">
+              <tr>
+                <td>12:30</td>
+                <td>ZRH</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="green-box">
+          <h2>ZRH - Airport</h2>
+          <table class="flight-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Arrival in</th>
+              </tr>
+            </thead>
+
+            <tbody id="flight-table-body">
+              <tr>
+                <td>12:30</td>
+                <td>ZRH</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="green-box">
+          <h2>ZRH - Airport</h2>
+          <table class="flight-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Arrival in</th>
+              </tr>
+            </thead>
+
+            <tbody id="flight-table-body">
+              <tr>
+                <td>12:30</td>
+                <td>ZRH</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <main class="content">
         <div class="red-box">
-          <div class="red-content">
-            <img src="sources/img/switzerland_transp.png" />
+          <div class="red-content image-wrap">
+            <img id="switzerland" src="sources/img/switzerland_transp.png" />
+            <img id="plane-template" src="sources/img/plane.png" alt="Plane" />
           </div>
 
           <div class="red-footer">
-            <div class="red-footer-small"></div>
-            <div class="red-footer-large"></div>
+            <div class="red-footer-small">
+              <input
+                type="image"
+                id="animation-button"
+                class="button"
+                src="sources/img/button.png"
+              />
+            </div>
+            <div class="red-footer-large">
+              <div class="timeline"></div>
+            </div>
           </div>
         </div>
       </main>
     </div>
-    <script src="js/script.js" type="module"></script>
   </body>
+  <script src="js/script.js" type="module"></script>
 </html>

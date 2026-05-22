@@ -1,45 +1,70 @@
 <?php
 
-function createOpenSkyDepartureUrl()
+function createOpenSkyDepartureUrl(): string
 {
-    // Use Zurich time for LSZH
     $timezone = new DateTimeZone("Europe/Zurich");
 
-    // Day before at 07:30
     $startDate = new DateTime("yesterday 07:30:00", $timezone);
-
-    // Day before at 23:00
     $endDate = new DateTime("yesterday 23:00:00", $timezone);
 
-    // Unix timestamps in seconds
     $start = $startDate->getTimestamp();
     $end = $endDate->getTimestamp();
 
-    return "https://opensky-network.org/api/flights/departure?airport=LSZH&begin={$start}&end={$end}";
+    return "https://opensky-network.org/api/flights/departure?" . http_build_query([
+        "airport" => "LSZH",
+        "begin" => $start,
+        "end" => $end,
+    ]);
 }
 
-// -> get token
+header('Content-Type: application/json; charset=utf-8');
+
 $accessToken = require __DIR__ . '/token.php';
 
-// -> load from api
 $ch = curl_init(createOpenSkyDepartureUrl());
+
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => [
-        "Authorization: Bearer $accessToken"
-    ]
+        "Authorization: Bearer " . trim($accessToken),
+        "Accept: application/json",
+    ],
 ]);
 
 $response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
 if ($response === false) {
-    http_response_code(500);
-    echo json_encode(['error' => curl_error($ch)]);
+    $error = curl_error($ch);
     curl_close($ch);
+
+    http_response_code(500);
+    echo json_encode([
+        "error" => "Curl failed",
+        "details" => $error,
+        "flights" => [],
+    ]);
     exit;
 }
 
 curl_close($ch);
 
-header('Content-Type: application/json; charset=utf-8');
-echo $response;
+$decoded = json_decode($response, true);
+
+if (json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(502);
+    echo json_encode([
+        "error" => "OpenSky did not return valid JSON",
+        "httpCode" => $httpCode,
+        "rawResponse" => $response,
+        "flights" => [],
+    ]);
+    exit;
+}
+
+echo json_encode([
+    "airport" => "LSZH",
+    "httpCode" => $httpCode,
+    "flights" => $decoded,
+]);
+exit;
