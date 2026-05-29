@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Swiss Flight Recap</title>
+
     <link rel="stylesheet" href="css/style.css" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,64 +14,104 @@
       rel="stylesheet"
     />
   </head>
+
   <body>
     <div class="website">
       <div class="sidebar">
-        <div class="green-box">
-          <h2>ZRH - Airport</h2>
+        <div class="flight-board">
+          <div class="flight-board-header">
+            <div class="plane-icon">✈</div>
+            <h2>ZRH - DEPARTURES</h2>
+          </div>
+
           <table class="flight-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Arrival in</th>
+                <th>TIME</th>
+                <th>DESTINATION</th>
               </tr>
             </thead>
 
-            <tbody id="flight-table-body">
+            <tbody class="flight-table-body" id="flight-table-body-1">
               <tr>
-                <td>12:30</td>
-                <td>ZRH</td>
+                <td>08:35</td>
+                <td>ZURICH</td>
+              </tr>
+              <tr>
+                <td>09:20</td>
+                <td>GENEVA</td>
+              </tr>
+              <tr>
+                <td>10:05</td>
+                <td>BASEL</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="green-box">
-          <h2>ZRH - Airport</h2>
+
+        <div class="flight-board">
+          <div class="flight-board-header">
+            <div class="plane-icon">✈</div>
+            <h2>DEPARTURES</h2>
+          </div>
+
           <table class="flight-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Arrival in</th>
+                <th>TIME</th>
+                <th>DESTINATION</th>
               </tr>
             </thead>
 
-            <tbody id="flight-table-body">
+            <tbody class="flight-table-body" id="flight-table-body-2">
               <tr>
-                <td>12:30</td>
-                <td>ZRH</td>
+                <td>11:15</td>
+                <td>LUGANO</td>
+              </tr>
+              <tr>
+                <td>12:40</td>
+                <td>SION</td>
+              </tr>
+              <tr>
+                <td>13:25</td>
+                <td>BERN</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="green-box">
-          <h2>ZRH - Airport</h2>
+
+        <div class="flight-board">
+          <div class="flight-board-header">
+            <div class="plane-icon">✈</div>
+            <h2>DEPARTURES</h2>
+          </div>
+
           <table class="flight-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Arrival in</th>
+                <th>TIME</th>
+                <th>DESTINATION</th>
               </tr>
             </thead>
 
-            <tbody id="flight-table-body">
+            <tbody class="flight-table-body" id="flight-table-body-3">
               <tr>
-                <td>12:30</td>
-                <td>ZRH</td>
+                <td>14:10</td>
+                <td>LUZERN</td>
+              </tr>
+              <tr>
+                <td>15:30</td>
+                <td>DAVOS</td>
+              </tr>
+              <tr>
+                <td>16:45</td>
+                <td>CHUR</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
       <main class="content">
         <div class="red-box">
           <div class="red-content image-wrap">
@@ -86,6 +128,7 @@
                 src="sources/img/button.png"
               />
             </div>
+
             <div class="red-footer-large">
               <div class="timeline"></div>
             </div>
@@ -93,6 +136,7 @@
         </div>
       </main>
     </div>
+
+    <script src="js/script.js" type="module"></script>
   </body>
-  <script src="js/script.js" type="module"></script>
 </html>
