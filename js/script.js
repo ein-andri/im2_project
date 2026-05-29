@@ -1,184 +1,153 @@
-async function loadData(url) {
-  try {
-    const response = await fetch(url);
+// script.js
 
-    if (!response.ok) {
-      throw new Error(`HTTP error: ${response.status}`);
-    }
+// ------------------------------------------------------
+// 1. Einstellungen
+// ------------------------------------------------------
 
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-}
+// Flughäfen, von denen deine APIs Flüge liefern.
+// x und y sind Prozentwerte innerhalb deiner Schweiz-Karte / .image-wrap.
+const departureAirports = [
+  {
+    code: "LSZH",
+    name: "Zürich",
+    url: "../api/get_all_flights1.php",
+    position: { x: 62, y: 34 },
+  },
+  {
+    code: "LSZR",
+    name: "St. Gallen-Altenrhein",
+    url: "../api/get_all_flights2.php",
+    position: { x: 82, y: 50 },
+  },
 
+  // Später kannst du hier einfach den dritten Flughafen ergänzen:
+  // {
+  //   code: "LSZB",
+  //   name: "Bern",
+  //   url: "../api/get_all_flights3.php",
+  //   position: { x: 46, y: 56 },
+  // },
+];
+
+// Bekannte Flughafenpositionen auf deiner Karte.
+// Auch hier sind x/y Prozentwerte innerhalb der Schweiz-Karte.
+const airportPositions = {
+  LSZH: { x: 62, y: 34 },
+  LSZR: { x: 82, y: 50 },
+
+  // Beispiele, musst du feinjustieren:
+  LSGG: { x: 15, y: 78 }, // Genf
+  LSZB: { x: 46, y: 56 }, // Bern
+  LSZA: { x: 72, y: 84 }, // Lugano
+  LFSB: { x: 32, y: 58 }, // Basel/Mulhouse ungefähr
+};
+
+// Für Ziele außerhalb deiner Schweiz-Karte.
+// Werte kleiner als 0 oder größer als 100 fliegen aus der Karte heraus.
+const destinationDirections = {
+  EDDF: { x: 75, y: -20 }, // Frankfurt: nach oben/rechts
+  EDDM: { x: 115, y: 45 }, // München: nach rechts
+  LOWW: { x: 130, y: 55 }, // Wien: weit nach rechts
+  LFPG: { x: -25, y: 35 }, // Paris: nach links
+  LIRF: { x: 65, y: 125 }, // Rom: nach unten
+  EGLL: { x: -25, y: 15 }, // London: links/oben
+};
+
+// Falls du gewisse Zielflughäfen komplett ignorieren willst:
 const excludedArrivalAirports = new Set([
-  "LSZH",
-  "LSGG",
-  "LSZB",
-  "LSGS",
-  "LSZA",
-  "LSZR",
-  "LSZS",
-  "LSGL",
-  "LSZG",
-  "LSZL",
-  "LSZF",
-  "LSZC",
-  "LSGC",
-  "LSGK",
-  "LSGN",
-  "LSGE",
-  "LSGT",
-  "LSGR",
-  "LSGP",
-  "LSPV",
-  "LSGY",
-  "LSGB",
-  "LSPL",
-  "LSZE",
-  "LSZU",
-  "LSZK",
-  "LSTA",
-  "LSZW",
-  "LSMD",
-  "LSZN",
-  "LSZP",
-  "LSTO",
-  "LSPM",
-  "LSMP",
-  "LSZQ",
-  "LSTS",
-  "LSPG",
-  "LSPN",
-  "LSTZ",
-  "LSMA",
-  "LSZM",
-  "LSZJ",
-  "LSML",
-  "LSZT",
-  "LSMM",
-  "LSPU",
-  "LSZO",
-  "LSZI",
-  "CH-0047",
-  "LSPD",
-  "CH-0042",
-  "LSPF",
-  "CH-0045",
-  "CH-0002",
-  "LSZX",
-  "LSXU",
-  "LSME",
-  "CH-0003",
-  "CH-0046",
-  "CH-0004",
-  "LSZV",
-  "LSTB",
-  "CH-0043",
-  "LSPH",
-  "CH-0018",
-  "CH-0019",
-  "CH-0028",
-  "LSXL",
-  "CH-0009",
-  "CH-0010",
-  "LSER",
-  "LSPA",
-  "CH-0044",
-  "LSVP",
-  "LSYX",
-  "LSYR",
-  "LSTR",
-  "LSYI",
-  "LSPO",
-  "LSVD",
-  "LSVV",
-  "LSYK",
-  "LSHA",
-  "CH-0008",
-  "CH-0026",
-  "CH-0031",
-  "CH-0032",
-  "CH-0024",
-  "LSHI",
-  "CH-0022",
-  "CH-0041",
-  "CH-0023",
-  "CH-0016",
-  "LSHC",
-  "CH-0021",
-  "LSMV",
-  "CH-0035",
-  "CH-0030",
-  "CH-0040",
-  "LSHG",
-  "LSHU",
-  "CH-0017",
-  "LSXG",
-  "CH-0036",
-  "CH-0025",
-  "LSXH",
-  "CH-0020",
-  "LSXY",
-  "LSXR",
-  "CH-0037",
-  "CH-0007",
-  "LSXP",
-  "CH-0038",
-  "CH-0001",
-  "CH-0006",
-  "LSXO",
-  "CH-0027",
-  "CH-0005",
-  "LSXM",
-  "CH-0039",
-  "LSXZ",
-  "LSXS",
-  "CH-0012",
-  "CH-0034",
-  "LSXT",
-  "CH-0029",
-  "CH-0033",
-  "CH-0048",
-  "LSEZ",
-  "CH-0011",
-  "CH-0013",
-  "CH-0014",
-  "CH-0015",
+  // "LSZH",
+  // "LSZR",
 ]);
 
-const data1 = await loadData("../api/get_all_flights1.php");
-const data2 = await loadData("../api/get_all_flights2.php");
+const recapDurationMs = 60_000;
+const planeAnimationDurationMs = 20_000;
 
-const data1Array = Array.isArray(data1?.flights) ? data1.flights : [];
-const data2Array = Array.isArray(data2?.flights) ? data2.flights : [];
+// Falls dein Flugzeugbild falsch herum schaut, ändere diesen Wert.
+// Gute Testwerte sind: 0, 90, -90 oder 180.
+const planeImageRotationOffset = 90;
 
-const sortedFlights = [...data1Array, ...data2Array]
-  .filter((flight) => !excludedArrivalAirports.has(flight.estArrivalAirport))
-  .sort((a, b) => Number(a.firstSeen) - Number(b.firstSeen));
-
-console.log("filtered and sorted flights:", sortedFlights);
-
-console.log("data1:", data1);
-console.log("data2:", data2);
-console.log("sortedFlights length:", sortedFlights.length);
-console.log("first sorted flight:", sortedFlights[0]);
-console.log(
-  "flights without firstSeen:",
-  sortedFlights.filter((flight) => flight.firstSeen === undefined).slice(0, 5),
-);
+// ------------------------------------------------------
+// 2. HTML-Elemente holen
+// ------------------------------------------------------
 
 const animationButton = document.getElementById("animation-button");
 const planeTemplate = document.getElementById("plane-template");
 const animationArea = document.querySelector(".image-wrap");
 
-const recapDurationMs = 60_000;
-const planeAnimationDurationMs = 20_000;
+// ------------------------------------------------------
+// 3. Aktive Animation merken
+// ------------------------------------------------------
 
+let sortedFlights = [];
 let activeTimeouts = [];
 let activePlanes = new Set();
+
+// ------------------------------------------------------
+// 4. Daten laden
+// ------------------------------------------------------
+
+async function loadData(url) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Fehler beim Laden von ${url}: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function loadFlightsFromDepartureAirports() {
+  const results = await Promise.all(
+    departureAirports.map(async (airport) => {
+      try {
+        const data = await loadData(airport.url);
+        const flights = Array.isArray(data?.flights) ? data.flights : [];
+
+        return flights.map((flight) => {
+          return {
+            ...flight,
+
+            // Wichtig:
+            // Damit weiß jedes Flugzeug später, von welchem Flughafen es starten soll.
+            departureAirport: flight.estDepartureAirport || airport.code,
+          };
+        });
+      } catch (error) {
+        console.error(`Konnte Flüge von ${airport.code} nicht laden:`, error);
+        return [];
+      }
+    }),
+  );
+
+  return results.flat();
+}
+
+async function initializeFlights() {
+  const allFlights = await loadFlightsFromDepartureAirports();
+
+  sortedFlights = allFlights
+    .filter((flight) => {
+      return !excludedArrivalAirports.has(flight.estArrivalAirport);
+    })
+    .sort((a, b) => {
+      return Number(a.firstSeen) - Number(b.firstSeen);
+    });
+
+  console.log("All loaded flights:", allFlights);
+  console.log("Filtered and sorted flights:", sortedFlights);
+  console.log("sortedFlights length:", sortedFlights.length);
+  console.log("first sorted flight:", sortedFlights[0]);
+  console.log(
+    "flights without firstSeen:",
+    sortedFlights
+      .filter((flight) => flight.firstSeen === undefined)
+      .slice(0, 5),
+  );
+}
+
+// ------------------------------------------------------
+// 5. Animation zurücksetzen
+// ------------------------------------------------------
 
 function clearCurrentAnimation() {
   activeTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
@@ -186,7 +155,15 @@ function clearCurrentAnimation() {
 
   activePlanes.forEach((plane) => plane.remove());
   activePlanes.clear();
+
+  if (animationButton) {
+    animationButton.disabled = false;
+  }
 }
+
+// ------------------------------------------------------
+// 6. Zeitstempel der Flüge
+// ------------------------------------------------------
 
 function getFlightTimestamp(flight) {
   const timestamp = Number(flight.firstSeen);
@@ -196,36 +173,6 @@ function getFlightTimestamp(flight) {
   }
 
   return timestamp;
-}
-
-function createPlaneForFlight(flight) {
-  const plane = document.createElement("img");
-
-  plane.src = planeTemplate.src;
-  plane.alt = flight.callsign ? `Plane ${flight.callsign.trim()}` : "Plane";
-
-  plane.classList.add("flight-plane");
-
-  plane.style.setProperty(
-    "--flight-animation-duration",
-    `${planeAnimationDurationMs}ms`,
-  );
-
-  plane.dataset.arrivalAirport = flight.estArrivalAirport || "";
-  plane.dataset.firstSeen = flight.firstSeen || "";
-
-  animationArea.appendChild(plane);
-  activePlanes.add(plane);
-
-  function removePlane() {
-    plane.remove();
-    activePlanes.delete(plane);
-  }
-
-  plane.addEventListener("animationend", removePlane, { once: true });
-
-  // Safety fallback in case animationend does not fire
-  setTimeout(removePlane, planeAnimationDurationMs + 1000);
 }
 
 function getScheduledFlights(flights) {
@@ -258,13 +205,141 @@ function getScheduledFlights(flights) {
   });
 }
 
+// ------------------------------------------------------
+// 7. Start- und Zielposition bestimmen
+// ------------------------------------------------------
+
+function getDepartureAirportConfig(departureAirportCode) {
+  return departureAirports.find((airport) => {
+    return airport.code === departureAirportCode;
+  });
+}
+
+function getDeparturePosition(flight) {
+  const departureAirportCode = flight.departureAirport;
+  const airportConfig = getDepartureAirportConfig(departureAirportCode);
+
+  if (airportConfig?.position) {
+    return airportConfig.position;
+  }
+
+  console.warn(
+    `Keine Startposition für ${departureAirportCode} gefunden. Nutze Mitte der Karte.`,
+  );
+
+  return { x: 50, y: 50 };
+}
+
+function getArrivalPosition(flight) {
+  const arrivalAirportCode = flight.estArrivalAirport;
+
+  if (airportPositions[arrivalAirportCode]) {
+    return airportPositions[arrivalAirportCode];
+  }
+
+  if (destinationDirections[arrivalAirportCode]) {
+    return destinationDirections[arrivalAirportCode];
+  }
+
+  return getFallbackDestinationPosition(arrivalAirportCode);
+}
+
+function getFallbackDestinationPosition(arrivalAirportCode) {
+  const fallbackPositions = [
+    { x: 50, y: -25 }, // nach oben
+    { x: 120, y: 20 }, // nach rechts oben
+    { x: 125, y: 70 }, // nach rechts unten
+    { x: 50, y: 125 }, // nach unten
+    { x: -25, y: 70 }, // nach links unten
+    { x: -25, y: 20 }, // nach links oben
+  ];
+
+  const code = String(arrivalAirportCode || "UNKNOWN");
+
+  const hash = [...code].reduce((sum, character) => {
+    return sum + character.charCodeAt(0);
+  }, 0);
+
+  return fallbackPositions[hash % fallbackPositions.length];
+}
+
+function getPlaneRotation(startPosition, endPosition) {
+  const deltaX = endPosition.x - startPosition.x;
+  const deltaY = endPosition.y - startPosition.y;
+
+  const angleInRadians = Math.atan2(deltaY, deltaX);
+  const angleInDegrees = angleInRadians * (180 / Math.PI);
+
+  return angleInDegrees + planeImageRotationOffset;
+}
+
+// ------------------------------------------------------
+// 8. Flugzeug erzeugen
+// ------------------------------------------------------
+
+function createPlaneForFlight(flight) {
+  if (!animationArea || !planeTemplate) {
+    console.error("animationArea oder planeTemplate wurde nicht gefunden.");
+    return;
+  }
+
+  const plane = document.createElement("img");
+
+  const startPosition = getDeparturePosition(flight);
+  const endPosition = getArrivalPosition(flight);
+  const rotation = getPlaneRotation(startPosition, endPosition);
+
+  plane.src = planeTemplate.src;
+  plane.alt = flight.callsign ? `Plane ${flight.callsign.trim()}` : "Plane";
+
+  plane.classList.add("flight-plane");
+
+  plane.style.setProperty(
+    "--flight-animation-duration",
+    `${planeAnimationDurationMs}ms`,
+  );
+
+  plane.style.setProperty("--start-x", `${startPosition.x}%`);
+  plane.style.setProperty("--start-y", `${startPosition.y}%`);
+  plane.style.setProperty("--end-x", `${endPosition.x}%`);
+  plane.style.setProperty("--end-y", `${endPosition.y}%`);
+  plane.style.setProperty("--plane-rotation", `${rotation}deg`);
+
+  plane.dataset.departureAirport = flight.departureAirport || "";
+  plane.dataset.arrivalAirport = flight.estArrivalAirport || "";
+  plane.dataset.firstSeen = flight.firstSeen || "";
+  plane.dataset.callsign = flight.callsign || "";
+
+  animationArea.appendChild(plane);
+  activePlanes.add(plane);
+
+  function removePlane() {
+    plane.remove();
+    activePlanes.delete(plane);
+  }
+
+  plane.addEventListener("animationend", removePlane, { once: true });
+
+  // Sicherheits-Fallback, falls animationend nicht ausgelöst wird.
+  const fallbackTimeoutId = setTimeout(
+    removePlane,
+    planeAnimationDurationMs + 1000,
+  );
+
+  activeTimeouts.push(fallbackTimeoutId);
+}
+
+// ------------------------------------------------------
+// 9. Flug-Rekap starten
+// ------------------------------------------------------
+
 function startFlightRecap() {
   clearCurrentAnimation();
 
   const scheduledFlights = getScheduledFlights(sortedFlights);
 
   if (scheduledFlights.length === 0) {
-    console.warn("No valid flights to animate.");
+    console.warn("Keine gültigen Flüge zum Animieren gefunden.");
     return;
   }
 
@@ -291,45 +366,32 @@ function startFlightRecap() {
   console.log(`Started recap with ${scheduledFlights.length} flights.`);
 }
 
-animationButton.addEventListener("click", startFlightRecap);
+// ------------------------------------------------------
+// 10. Seite initialisieren
+// ------------------------------------------------------
 
-/*
+async function init() {
+  if (!animationButton) {
+    console.error("Button mit ID animation-button wurde nicht gefunden.");
+    return;
+  }
 
-let time_begin = 1777960800;
-let time_end = 1777964400;
+  if (!planeTemplate) {
+    console.error("Bild mit ID plane-template wurde nicht gefunden.");
+    return;
+  }
 
-function createOpenSkyDepartureUrl(airport = "LSZH") {
-  const now = new Date();
+  if (!animationArea) {
+    console.error("Element mit Klasse .image-wrap wurde nicht gefunden.");
+    return;
+  }
 
-  // Day before at 07:30
-  const startDate = new Date(now);
-  startDate.setDate(now.getDate() - 1);
-  startDate.setHours(7, 30, 0, 0);
+  animationButton.disabled = true;
 
-  // Day before at 23:00
-  const endDate = new Date(now);
-  endDate.setDate(now.getDate() - 1);
-  endDate.setHours(23, 0, 0, 0);
+  await initializeFlights();
 
-  // Unix timestamps in seconds
-  const start = Math.floor(startDate.getTime() / 1000);
-  const end = Math.floor(endDate.getTime() / 1000);
-
-  const url = `https://opensky-network.org/api/flights/departure?airport=${airport}&begin=${start}&end=${end}`;
-
-  return {
-    start,
-    end,
-    url,
-  };
+  animationButton.disabled = false;
+  animationButton.addEventListener("click", startFlightRecap);
 }
 
-// Example usage
-const { start, end, url } = createOpenSkyDepartureUrl();
-
-console.log(start);
-console.log(end);
-console.log(url);
-
-
-*/
+init();
