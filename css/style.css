@@ -252,3 +252,209 @@ h2 {
   justify-content: center;
   align-items: center;
 }
+
+/* MOBILE LAYOUT */
+@media (max-width: 1000px) {
+  :root {
+    --mobile-boards-height: 150px;
+    --mobile-footer-height: 130px;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .website {
+    width: 100vw;
+    height: 100dvh;
+    display: block;
+    border: none;
+    overflow: hidden;
+  }
+
+  /* Flight boards fixed at the top */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+
+    width: 100vw;
+    max-width: none;
+    height: var(--mobile-boards-height);
+
+    border-right: none;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: flex-start;
+
+    gap: 8px;
+    padding: 18px 8px 8px;
+  }
+
+  .flight-board {
+    width: 25%;
+    min-height: 0;
+
+    padding: 3px;
+    border-width: 2px;
+
+    box-shadow:
+      inset 0 0 0 2px #4f5d63,
+      0 4px 0 #4d585d,
+      0 6px 0 #1b2226;
+  }
+
+  .flight-board-header {
+    grid-template-columns: 18px 1fr;
+    gap: 4px;
+    padding: 2px;
+    border-width: 2px;
+  }
+
+  .flight-board-header h2 {
+    font-size: 1rem;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .plane-icon {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    font-size: 0.8rem;
+  }
+
+  .flight-table {
+    border-width: 2px;
+  }
+
+  .flight-table th {
+    font-size: 0.75rem;
+    padding: 1px 2px;
+  }
+
+  .flight-table td {
+    font-size: 0.85rem;
+    padding: 1px 3px;
+  }
+
+  .flight-table th:first-child,
+  .flight-table td:first-child {
+    width: 38%;
+    border-right-width: 2px;
+  }
+
+  .flight-table tbody tr {
+    border-top-width: 2px;
+  }
+
+  /* This becomes the touch-scroll area */
+  .content {
+    position: fixed;
+    inset: 0;
+
+    display: block;
+
+    padding-top: var(--mobile-boards-height);
+    padding-bottom: var(--mobile-footer-height);
+
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+
+  /* Remove the desktop red layout constraints */
+  .red-box {
+    width: max-content;
+    height: auto;
+    min-height: calc(100dvh + 250px);
+
+    border: none;
+
+    display: block;
+  }
+
+  .red-content {
+    width: max-content;
+    height: auto;
+    overflow: visible;
+  }
+
+  .image-wrap {
+    width: max-content;
+    overflow: visible;
+  }
+
+  /* Make the map wider than the screen */
+  #switzerland {
+    display: block;
+
+    max-width: 130vw;
+    height: auto;
+
+    margin-top: 80px;
+  }
+
+  .flight-plane {
+    width: 70px;
+    max-width: none;
+  }
+
+  /* Optional: keep button/timeline fixed at bottom on mobile */
+  .red-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+
+    width: 100vw;
+    height: var(--mobile-footer-height);
+
+    border-top: none;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+  }
+
+  .red-footer-small {
+    width: 100%;
+    height: 55px;
+    border-right: none;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .red-footer-small .button {
+    max-width: 20%;
+    height: auto;
+  }
+
+  .red-footer-large {
+    width: 100%;
+    height: 35px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .timeline {
+    width: 82%;
+    height: 8px;
+    background-color: #ff9500;
+  }
+}
