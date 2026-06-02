@@ -6,18 +6,21 @@
 
 // Flughäfen, von denen deine APIs Flüge liefern.
 // x und y sind Prozentwerte innerhalb deiner Schweiz-Karte / .image-wrap.
+// tableBodySelector bestimmt, in welches Board die Flüge geschrieben werden.
 const departureAirports = [
   {
     code: "LSZH",
     name: "Zürich",
     url: "../api/get_all_flights1.php",
     position: { x: 62, y: 34 },
+    tableBodySelector: "#flight-table-body-1",
   },
   {
     code: "LSZR",
     name: "St. Gallen-Altenrhein",
     url: "../api/get_all_flights2.php",
     position: { x: 82, y: 50 },
+    tableBodySelector: "#flight-table-body-2",
   },
 
   // Später kannst du hier einfach den dritten Flughafen ergänzen:
@@ -26,11 +29,11 @@ const departureAirports = [
   //   name: "Bern",
   //   url: "../api/get_all_flights3.php",
   //   position: { x: 46, y: 56 },
+  //   tableBodySelector: "#flight-table-body-3",
   // },
 ];
 
 // Bekannte Flughafenpositionen auf deiner Karte.
-// Auch hier sind x/y Prozentwerte innerhalb der Schweiz-Karte.
 const airportPositions = {
   LSZH: { x: 62, y: 34 },
   LSZR: { x: 82, y: 50 },
@@ -43,14 +46,13 @@ const airportPositions = {
 };
 
 // Für Ziele außerhalb deiner Schweiz-Karte.
-// Werte kleiner als 0 oder größer als 100 fliegen aus der Karte heraus.
 const destinationDirections = {
-  EDDF: { x: 75, y: -20 }, // Frankfurt: nach oben/rechts
-  EDDM: { x: 115, y: 45 }, // München: nach rechts
-  LOWW: { x: 130, y: 55 }, // Wien: weit nach rechts
-  LFPG: { x: -25, y: 35 }, // Paris: nach links
-  LIRF: { x: 65, y: 125 }, // Rom: nach unten
-  EGLL: { x: -25, y: 15 }, // London: links/oben
+  EDDF: { x: 75, y: -20 }, // Frankfurt
+  EDDM: { x: 115, y: 45 }, // München
+  LOWW: { x: 130, y: 55 }, // Wien
+  LFPG: { x: -25, y: 35 }, // Paris
+  LIRF: { x: 65, y: 125 }, // Rom
+  EGLL: { x: -25, y: 15 }, // London
 };
 
 // Falls du gewisse Zielflughäfen komplett ignorieren willst:
@@ -59,8 +61,9 @@ const excludedArrivalAirports = new Set([
   // "LSZR",
 ]);
 
-const recapDurationMs = 60_000;
+const recapDurationMs = 120_000;
 const planeAnimationDurationMs = 20_000;
+const maxFlightRowsPerTable = 4;
 
 // Falls dein Flugzeugbild falsch herum schaut, ändere diesen Wert.
 // Gute Testwerte sind: 0, 90, -90 oder 180.
@@ -81,6 +84,7 @@ const animationArea = document.querySelector(".image-wrap");
 let sortedFlights = [];
 let activeTimeouts = [];
 let activePlanes = new Set();
+let activeFlightRows = new Set();
 
 // ------------------------------------------------------
 // 4. Daten laden
@@ -146,7 +150,170 @@ async function initializeFlights() {
 }
 
 // ------------------------------------------------------
-// 5. Animation zurücksetzen
+// 5. Tabellen vorbereiten und aktualisieren
+// ------------------------------------------------------
+
+function getTableBodyForDepartureAirport(departureAirportCode) {
+  const airportConfig = getDepartureAirportConfig(departureAirportCode);
+
+  if (!airportConfig?.tableBodySelector) {
+    return null;
+  }
+
+  return document.querySelector(airportConfig.tableBodySelector);
+}
+
+function createEmptyFlightTableRow() {
+  const row = document.createElement("tr");
+  row.dataset.emptyRow = "true";
+  row.classList.add("empty-flight-row");
+
+  const timeCell = document.createElement("td");
+  const destinationCell = document.createElement("td");
+
+  // &nbsp; sorgt dafür, dass die Zeile optisch Höhe behält.
+  timeCell.textContent = "\u00A0";
+  destinationCell.textContent = "\u00A0";
+
+  row.appendChild(timeCell);
+  row.appendChild(destinationCell);
+
+  return row;
+}
+
+function getActiveRowsFromTable(tableBody) {
+  return Array.from(tableBody.querySelectorAll("tr[data-flight-row='true']"));
+}
+
+function normalizeFlightTable(tableBody) {
+  // Zuerst alle leeren Platzhalter-Zeilen entfernen.
+  tableBody
+    .querySelectorAll("tr[data-empty-row='true']")
+    .forEach((row) => row.remove());
+
+  let activeRows = getActiveRowsFromTable(tableBody);
+
+  // Aktive Flüge nach Zeit sortieren.
+  activeRows.sort((a, b) => {
+    return Number(a.dataset.timestamp) - Number(b.dataset.timestamp);
+  });
+
+  // Falls mehr als 4 aktive Flüge vorhanden sind:
+  // älteste löschen, neueste behalten.
+  while (activeRows.length > maxFlightRowsPerTable) {
+    const oldestRow = activeRows.shift();
+
+    oldestRow.remove();
+    activeFlightRows.delete(oldestRow);
+  }
+
+  // Sortierte aktive Zeilen wieder in die Tabelle einsetzen.
+  activeRows.forEach((row) => {
+    tableBody.appendChild(row);
+  });
+
+  // Mit leeren Zeilen auffüllen, bis immer 4 Zeilen sichtbar sind.
+  while (tableBody.children.length < maxFlightRowsPerTable) {
+    tableBody.appendChild(createEmptyFlightTableRow());
+  }
+}
+
+function clearAllFlightTables() {
+  departureAirports.forEach((airport) => {
+    const tableBody = document.querySelector(airport.tableBodySelector);
+
+    if (tableBody) {
+      tableBody.innerHTML = "";
+      normalizeFlightTable(tableBody);
+    }
+  });
+
+  activeFlightRows.clear();
+}
+
+function formatTimestampAsTime(timestamp) {
+  const numericTimestamp = Number(timestamp);
+
+  if (!Number.isFinite(numericTimestamp)) {
+    return "--:--";
+  }
+
+  const timestampInMs =
+    numericTimestamp < 10_000_000_000
+      ? numericTimestamp * 1000
+      : numericTimestamp;
+
+  return new Intl.DateTimeFormat("de-CH", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Europe/Zurich",
+  }).format(new Date(timestampInMs));
+}
+
+function getFlightDestinationLabel(flight) {
+  return flight.estArrivalAirport || "UNKNOWN";
+}
+
+function createFlightTableRow(flight) {
+  const row = document.createElement("tr");
+
+  const timestamp = getFlightTimestamp(flight);
+  const timeCell = document.createElement("td");
+  const destinationCell = document.createElement("td");
+
+  timeCell.textContent = formatTimestampAsTime(flight.firstSeen);
+  destinationCell.textContent = getFlightDestinationLabel(flight);
+
+  row.appendChild(timeCell);
+  row.appendChild(destinationCell);
+
+  row.dataset.flightRow = "true";
+  row.dataset.timestamp = timestamp ?? "";
+  row.dataset.departureAirport = flight.departureAirport || "";
+  row.dataset.arrivalAirport = flight.estArrivalAirport || "";
+  row.dataset.callsign = flight.callsign || "";
+
+  return row;
+}
+
+function addFlightToTable(flight) {
+  const tableBody = getTableBodyForDepartureAirport(flight.departureAirport);
+
+  if (!tableBody) {
+    console.warn(
+      `Keine Tabelle für Abflughafen ${flight.departureAirport} gefunden.`,
+    );
+    return null;
+  }
+
+  const row = createFlightTableRow(flight);
+
+  tableBody.appendChild(row);
+  activeFlightRows.add(row);
+
+  normalizeFlightTable(tableBody);
+
+  return row;
+}
+
+function removeFlightRow(row) {
+  if (!row) {
+    return;
+  }
+
+  const tableBody = row.parentElement;
+
+  row.remove();
+  activeFlightRows.delete(row);
+
+  if (tableBody) {
+    normalizeFlightTable(tableBody);
+  }
+}
+
+// ------------------------------------------------------
+// 6. Animation zurücksetzen
 // ------------------------------------------------------
 
 function clearCurrentAnimation() {
@@ -156,13 +323,15 @@ function clearCurrentAnimation() {
   activePlanes.forEach((plane) => plane.remove());
   activePlanes.clear();
 
+  clearAllFlightTables();
+
   if (animationButton) {
     animationButton.disabled = false;
   }
 }
 
 // ------------------------------------------------------
-// 6. Zeitstempel der Flüge
+// 7. Zeitstempel der Flüge
 // ------------------------------------------------------
 
 function getFlightTimestamp(flight) {
@@ -206,7 +375,7 @@ function getScheduledFlights(flights) {
 }
 
 // ------------------------------------------------------
-// 7. Start- und Zielposition bestimmen
+// 8. Start- und Zielposition bestimmen
 // ------------------------------------------------------
 
 function getDepartureAirportConfig(departureAirportCode) {
@@ -246,12 +415,12 @@ function getArrivalPosition(flight) {
 
 function getFallbackDestinationPosition(arrivalAirportCode) {
   const fallbackPositions = [
-    { x: 50, y: -25 }, // nach oben
-    { x: 120, y: 20 }, // nach rechts oben
-    { x: 125, y: 70 }, // nach rechts unten
-    { x: 50, y: 125 }, // nach unten
-    { x: -25, y: 70 }, // nach links unten
-    { x: -25, y: 20 }, // nach links oben
+    { x: 50, y: -25 },
+    { x: 120, y: 20 },
+    { x: 125, y: 70 },
+    { x: 50, y: 125 },
+    { x: -25, y: 70 },
+    { x: -25, y: 20 },
   ];
 
   const code = String(arrivalAirportCode || "UNKNOWN");
@@ -274,7 +443,7 @@ function getPlaneRotation(startPosition, endPosition) {
 }
 
 // ------------------------------------------------------
-// 8. Flugzeug erzeugen
+// 9. Flugzeug erzeugen
 // ------------------------------------------------------
 
 function createPlaneForFlight(flight) {
@@ -313,16 +482,33 @@ function createPlaneForFlight(flight) {
   animationArea.appendChild(plane);
   activePlanes.add(plane);
 
-  function removePlane() {
+  // Neuer Teil:
+  // Sobald das Flugzeug sichtbar wird, erscheint auch der Eintrag im Board.
+  const flightRow = addFlightToTable(flight);
+
+  let alreadyRemoved = false;
+
+  function removePlaneAndTableRow() {
+    if (alreadyRemoved) {
+      return;
+    }
+
+    alreadyRemoved = true;
+
     plane.remove();
     activePlanes.delete(plane);
+
+    // Sobald das Flugzeug verschwindet, verschwindet auch der Tabelleneintrag.
+    removeFlightRow(flightRow);
   }
 
-  plane.addEventListener("animationend", removePlane, { once: true });
+  plane.addEventListener("animationend", removePlaneAndTableRow, {
+    once: true,
+  });
 
   // Sicherheits-Fallback, falls animationend nicht ausgelöst wird.
   const fallbackTimeoutId = setTimeout(
-    removePlane,
+    removePlaneAndTableRow,
     planeAnimationDurationMs + 1000,
   );
 
@@ -330,7 +516,7 @@ function createPlaneForFlight(flight) {
 }
 
 // ------------------------------------------------------
-// 9. Flug-Rekap starten
+// 10. Flug-Rekap starten
 // ------------------------------------------------------
 
 function startFlightRecap() {
@@ -367,7 +553,7 @@ function startFlightRecap() {
 }
 
 // ------------------------------------------------------
-// 10. Seite initialisieren
+// 11. Seite initialisieren
 // ------------------------------------------------------
 
 async function init() {
@@ -387,6 +573,9 @@ async function init() {
   }
 
   animationButton.disabled = true;
+
+  // Entfernt die statischen Beispiel-Zeilen aus deinem HTML.
+  clearAllFlightTables();
 
   await initializeFlights();
 
