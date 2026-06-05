@@ -7,6 +7,7 @@
 // Flughäfen, von denen deine APIs Flüge liefern.
 // x und y sind Prozentwerte innerhalb deiner Schweiz-Karte / .image-wrap.
 // tableBodySelector bestimmt, in welches Board die Flüge geschrieben werden.
+
 const departureAirports = [
   {
     code: "LSZH",
@@ -16,21 +17,20 @@ const departureAirports = [
     tableBodySelector: "#flight-table-body-1",
   },
   {
-    code: "LSZR",
-    name: "St. Gallen-Altenrhein",
+    code: "LSZB",
+    name: "Bern-Belp",
     url: "../api/get_all_flights2.php",
     position: { x: 82, y: 50 },
     tableBodySelector: "#flight-table-body-2",
   },
 
-  // Später kannst du hier einfach den dritten Flughafen ergänzen:
-  // {
-  //   code: "LSZB",
-  //   name: "Bern",
-  //   url: "../api/get_all_flights3.php",
-  //   position: { x: 46, y: 56 },
-  //   tableBodySelector: "#flight-table-body-3",
-  // },
+  {
+    code: "LSGG",
+    name: "Genf",
+    url: "../api/get_all_flights3.php",
+    position: { x: 46, y: 56 },
+    tableBodySelector: "#flight-table-body-3",
+  },
 ];
 
 // Bekannte Flughafenpositionen auf deiner Karte.
@@ -65,6 +65,17 @@ const recapDurationMs = 120_000;
 const planeAnimationDurationMs = 20_000;
 const maxFlightRowsPerTable = 4;
 
+const bodyBackgroundIdleColor = "#33aad1";
+const bodyBackgroundDarkColor = "#15718F";
+
+// Diese drei Werte kannst du frei ändern.
+// Sie müssen nicht zwingend 100 ergeben, werden unten automatisch normalisiert.
+const bodyColorStartPercent = 10;
+const bodyColorMiddlePercent = 80;
+const bodyColorEndPercent = 10;
+
+const bodyColorEasing = "ease-in";
+
 // Falls dein Flugzeugbild falsch herum schaut, ändere diesen Wert.
 // Gute Testwerte sind: 0, 90, -90 oder 180.
 const planeImageRotationOffset = 90;
@@ -77,6 +88,8 @@ const animationButton = document.getElementById("animation-button");
 const planeTemplate = document.getElementById("plane-template");
 const animationArea = document.querySelector(".image-wrap");
 
+const timelineProgress = document.getElementById("timeline-progress");
+
 // ------------------------------------------------------
 // 3. Aktive Animation merken
 // ------------------------------------------------------
@@ -85,6 +98,9 @@ let sortedFlights = [];
 let activeTimeouts = [];
 let activePlanes = new Set();
 let activeFlightRows = new Set();
+
+let timelineProgressAnimation = null;
+let bodyColorAnimation = null;
 
 // ------------------------------------------------------
 // 4. Daten laden
@@ -515,6 +531,164 @@ function createPlaneForFlight(flight) {
   activeTimeouts.push(fallbackTimeoutId);
 }
 
+function getTimelineProgressPositions() {
+  const timeline = timelineProgress.closest(".timeline");
+  const leftBar = timeline.querySelector(".bar-left");
+  const rightBar = timeline.querySelector(".bar-right");
+
+  const timelineRect = timeline.getBoundingClientRect();
+  const leftBarRect = leftBar.getBoundingClientRect();
+  const rightBarRect = rightBar.getBoundingClientRect();
+
+  const startX = leftBarRect.left + leftBarRect.width / 2 - timelineRect.left;
+
+  const endX = rightBarRect.left + rightBarRect.width / 2 - timelineRect.left;
+
+  return {
+    startX,
+    endX,
+    distance: endX - startX,
+  };
+}
+
+function resetTimelineProgress() {
+  if (!timelineProgress) {
+    return;
+  }
+
+  const { startX } = getTimelineProgressPositions();
+
+  timelineProgress.style.left = `${startX}px`;
+  timelineProgress.style.transform = "translate(-50%, -50%)";
+}
+
+function stopRecapVisualAnimations() {
+  if (timelineProgressAnimation) {
+    timelineProgressAnimation.cancel();
+    timelineProgressAnimation = null;
+  }
+
+  if (bodyColorAnimation) {
+    bodyColorAnimation.cancel();
+    bodyColorAnimation = null;
+  }
+
+  resetTimelineProgress();
+  document.body.style.backgroundColor = bodyBackgroundIdleColor;
+}
+
+function getBodyColorOffsets() {
+  const total =
+    bodyColorStartPercent + bodyColorMiddlePercent + bodyColorEndPercent;
+
+  if (total <= 0) {
+    return {
+      darkUntilOffset: 0.1,
+      lightUntilOffset: 0.9,
+    };
+  }
+
+  const darkUntilOffset = bodyColorStartPercent / total;
+  const lightUntilOffset =
+    (bodyColorStartPercent + bodyColorMiddlePercent) / total;
+
+  return {
+    darkUntilOffset,
+    lightUntilOffset,
+  };
+}
+
+function startTimelineProgressAnimation() {
+  if (!timelineProgress) {
+    return;
+  }
+
+  if (timelineProgressAnimation) {
+    timelineProgressAnimation.cancel();
+  }
+
+  const { startX, distance } = getTimelineProgressPositions();
+
+  timelineProgress.style.left = `${startX}px`;
+  timelineProgress.style.transform = "translate(-50%, -50%)";
+
+  timelineProgressAnimation = timelineProgress.animate(
+    [
+      {
+        transform: "translate(-50%, -50%) translateX(0px)",
+      },
+      {
+        transform: `translate(-50%, -50%) translateX(${distance}px)`,
+      },
+    ],
+    {
+      duration: recapDurationMs,
+      easing: "linear",
+      fill: "none",
+    },
+  );
+
+  timelineProgressAnimation.addEventListener(
+    "finish",
+    () => {
+      resetTimelineProgress();
+      timelineProgressAnimation = null;
+    },
+    { once: true },
+  );
+}
+
+function startBodyColorAnimation() {
+  if (bodyColorAnimation) {
+    bodyColorAnimation.cancel();
+  }
+
+  const { darkUntilOffset, lightUntilOffset } = getBodyColorOffsets();
+
+  document.body.style.backgroundColor = bodyBackgroundDarkColor;
+
+  bodyColorAnimation = document.body.animate(
+    [
+      {
+        backgroundColor: bodyBackgroundDarkColor,
+        offset: 0,
+      },
+      {
+        backgroundColor: bodyBackgroundDarkColor,
+        offset: darkUntilOffset,
+        easing: bodyColorEasing,
+      },
+      {
+        backgroundColor: bodyBackgroundIdleColor,
+        offset: lightUntilOffset,
+        easing: bodyColorEasing,
+      },
+      {
+        backgroundColor: bodyBackgroundDarkColor,
+        offset: 1,
+      },
+    ],
+    {
+      duration: recapDurationMs,
+      fill: "forwards",
+    },
+  );
+
+  bodyColorAnimation.addEventListener(
+    "finish",
+    () => {
+      document.body.style.backgroundColor = bodyBackgroundDarkColor;
+      bodyColorAnimation = null;
+    },
+    { once: true },
+  );
+}
+
+function startRecapVisualAnimations() {
+  startTimelineProgressAnimation();
+  startBodyColorAnimation();
+}
+
 // ------------------------------------------------------
 // 10. Flug-Rekap starten
 // ------------------------------------------------------
@@ -530,6 +704,9 @@ function startFlightRecap() {
   }
 
   animationButton.disabled = true;
+
+  // Das hat bei dir gefehlt:
+  startRecapVisualAnimations();
 
   scheduledFlights.forEach(({ flight, delay }) => {
     const timeoutId = setTimeout(() => {

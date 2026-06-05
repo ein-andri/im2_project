@@ -10,7 +10,7 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background-color: #33aad1;
+  background-color: #15718f;
 }
 
 h2 {
@@ -28,7 +28,6 @@ h2 {
 /* Linke Spalte */
 .sidebar {
   max-width: 35%;
-  height: 100%;
   border-right: 0.2vw solid black;
 
   display: flex;
@@ -238,12 +237,6 @@ h2 {
   height: 90%;
 }
 
-.timeline {
-  width: 90%;
-  height: 20%;
-  background-color: white;
-}
-
 .red-footer-large {
   width: 75%;
   height: 100%;
@@ -251,6 +244,101 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.timeline {
+  --orange: #ff9800;
+
+  --line-height: clamp(8px, 1vw, 14px);
+  --edge-width: clamp(18px, 1.5vw, 32px);
+  --small-width: clamp(8px, 0.8vw, 14px);
+
+  --edge-height: clamp(90px, 8vw, 150px);
+  --small-height: clamp(55px, 5vw, 90px);
+
+  position: relative;
+  width: 90%;
+  height: clamp(120px, 12vw, 220px);
+  margin: 0 auto;
+}
+
+/* horizontale Linie */
+.timeline-line {
+  position: absolute;
+  left: calc(var(--edge-width) / 2);
+  right: calc(var(--edge-width) / 2);
+  top: 50%;
+  height: var(--line-height);
+  background: var(--orange);
+  transform: translateY(-50%);
+}
+
+/* alle vertikalen Linien */
+.bar {
+  position: absolute;
+  top: 50%;
+  background: var(--orange);
+  transform: translate(-50%, -50%);
+}
+
+/* große Randlinien */
+.bar-edge {
+  width: var(--edge-width);
+  height: var(--edge-height);
+}
+
+/* kurze Linien */
+.bar-small {
+  width: var(--small-width);
+  height: var(--small-height);
+}
+
+/* Positionen */
+.bar-left {
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.bar-right {
+  right: 0;
+  transform: translateY(-50%);
+}
+
+.bar-quarter-left {
+  left: 25%;
+}
+
+.bar-center {
+  left: 50%;
+}
+
+.bar-quarter-right {
+  left: 75%;
+}
+
+.timeline-line {
+  z-index: 1;
+}
+
+.bar {
+  z-index: 3;
+}
+
+.timeline-progress {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--edge-width) / 2);
+
+  width: clamp(2px, 0.2vw, 4px);
+  height: var(--edge-height);
+
+  background: white;
+  transform: translate(-50%, -50%);
+
+  z-index: 5;
+  pointer-events: none;
+
+  will-change: left;
 }
 
 /* MOBILE LAYOUT */
@@ -451,10 +539,24 @@ h2 {
     justify-content: center;
     align-items: center;
   }
+}
 
-  .timeline {
+/*
+.timeline {
     width: 82%;
     height: 8px;
     background-color: #ff9500;
   }
+
+  */
+
+* {
+  font-size: 14px;
+  line-height: 1;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+tr {
+  padding: 0px;
 }

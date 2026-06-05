@@ -11,7 +11,7 @@ function createOpenSkyDepartureUrl(): string
     $end = $endDate->getTimestamp();
 
     return "https://opensky-network.org/api/flights/departure?" . http_build_query([
-        "airport" => "LSZB",
+        "airport" => "LSGG",
         "begin" => $start,
         "end" => $end,
     ]);
