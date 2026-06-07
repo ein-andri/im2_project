@@ -141,22 +141,13 @@ async function initializeFlights() {
 
   sortedFlights = allFlights
     .filter((flight) => {
-      return !excludedArrivalAirports.has(flight.estArrivalAirport);
+      return Number.isFinite(Number(flight.firstSeen));
     })
     .sort((a, b) => {
       return Number(a.firstSeen) - Number(b.firstSeen);
     });
 
-  console.log("All loaded flights:", allFlights);
-  console.log("Filtered and sorted flights:", sortedFlights);
-  console.log("sortedFlights length:", sortedFlights.length);
-  console.log("first sorted flight:", sortedFlights[0]);
-  console.log(
-    "flights without firstSeen:",
-    sortedFlights
-      .filter((flight) => flight.firstSeen === undefined)
-      .slice(0, 5),
-  );
+  console.log(`Loaded ${sortedFlights.length} flights.`);
 }
 
 // ------------------------------------------------------
