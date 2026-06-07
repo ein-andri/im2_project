@@ -8,54 +8,64 @@
 // x und y sind Prozentwerte innerhalb deiner Schweiz-Karte / .image-wrap.
 // tableBodySelector bestimmt, in welches Board die Flüge geschrieben werden.
 
-/*
+// Lädt Himmelsrichtungsdaten für Ankunftsflughäfen
+async function loadAirportCodes() {
+  try {
+    const file = "./json/airport-codes.json";
+    const dataResponse = await fetch(file);
+
+    if (!dataResponse.ok) {
+      throw new Error(`Fehler beim Laden von ${file}: ${dataResponse.status}`);
+    }
+
+    return await dataResponse.json();
+  } catch (error) {
+    console.error("airport-codes.json konnte nicht geladen werden:", error);
+    return [];
+  }
+}
+
+const airportCodeData = await loadAirportCodes();
+
+const airportsByIcaoCode = new Map(
+  airportCodeData
+    .filter((airport) => airport?.icao_code)
+    .map((airport) => {
+      return [airport.icao_code.trim().toUpperCase(), airport];
+    }),
+);
+
+function getAirportInfoByIcaoCode(icaoCode) {
+  const normalizedCode = String(icaoCode || "")
+    .trim()
+    .toUpperCase();
+
+  return airportsByIcaoCode.get(normalizedCode) || null;
+}
 
 const departureAirports = [
   {
     code: "LSZH",
     name: "Zürich",
     url: "../api/get_all_flights1.php",
-    position: { x: 62, y: 34 },
+    position: { x: 62, y: 30 }, // stimmt bereits
     tableBodySelector: "#flight-table-body-1",
   },
   {
     code: "LSZB",
     name: "Bern-Belp",
     url: "../api/get_all_flights2.php",
-    position: { x: 82, y: 50 },
+    position: { x: 46, y: 37 }, // Bern auf der neuen Karte
     tableBodySelector: "#flight-table-body-2",
   },
-
   {
     code: "LSGG",
     name: "Genf",
     url: "../api/get_all_flights3.php",
-    position: { x: 46, y: 56 },
+    position: { x: 15, y: 55 }, // Genf auf der neuen Karte
     tableBodySelector: "#flight-table-body-3",
   },
 ];
-
-// Bekannte Flughafenpositionen auf deiner Karte.
-const airportPositions = {
-  LSZH: { x: 62, y: 34 },
-  LSZR: { x: 82, y: 50 },
-
-  // Beispiele, musst du feinjustieren:
-  LSGG: { x: 15, y: 78 }, // Genf
-  LSZB: { x: 46, y: 56 }, // Bern
-  LSZA: { x: 72, y: 84 }, // Lugano
-  LFSB: { x: 32, y: 58 }, // Basel/Mulhouse ungefähr
-};
-
-// Für Ziele außerhalb deiner Schweiz-Karte.
-const destinationDirections = {
-  EDDF: { x: 75, y: -20 }, // Frankfurt
-  EDDM: { x: 115, y: 45 }, // München
-  LOWW: { x: 130, y: 55 }, // Wien
-  LFPG: { x: -25, y: 35 }, // Paris
-  LIRF: { x: 65, y: 125 }, // Rom
-  EGLL: { x: -25, y: 15 }, // London
-};
 
 // Falls du gewisse Zielflughäfen komplett ignorieren willst:
 const excludedArrivalAirports = new Set([
@@ -270,6 +280,12 @@ function formatTimestampAsTime(timestamp) {
 }
 
 function getFlightDestinationLabel(flight) {
+  const airportInfo = getAirportInfoByIcaoCode(flight.estArrivalAirport);
+
+  if (airportInfo?.name) {
+    return airportInfo.name;
+  }
+
   return flight.estArrivalAirport || "UNKNOWN";
 }
 
@@ -417,44 +433,101 @@ function getDeparturePosition(flight) {
   return { x: 50, y: 50 };
 }
 
-function getArrivalPosition(flight) {
-  const arrivalAirportCode = flight.estArrivalAirport;
+const directionVectors = {
+  N: { x: 0, y: -1 },
+  NO: { x: Math.SQRT1_2, y: -Math.SQRT1_2 },
+  O: { x: 1, y: 0 },
+  SO: { x: Math.SQRT1_2, y: Math.SQRT1_2 },
+  S: { x: 0, y: 1 },
+  SW: { x: -Math.SQRT1_2, y: Math.SQRT1_2 },
+  W: { x: -1, y: 0 },
+  NW: { x: -Math.SQRT1_2, y: -Math.SQRT1_2 },
+};
 
-  if (airportPositions[arrivalAirportCode]) {
-    return airportPositions[arrivalAirportCode];
+function getDirectionForFlight(flight) {
+  const airportInfo = getAirportInfoByIcaoCode(flight.estArrivalAirport);
+  const direction = airportInfo?.Himmelsrichtung;
+
+  if (directionVectors[direction]) {
+    return direction;
   }
 
-  if (destinationDirections[arrivalAirportCode]) {
-    return destinationDirections[arrivalAirportCode];
+  console.warn(
+    `Keine gültige Himmelsrichtung für ${flight.estArrivalAirport} gefunden. Nutze N als Fallback.`,
+  );
+
+  return "N";
+}
+
+function getPositionInPixels(percentPosition) {
+  const rect = animationArea.getBoundingClientRect();
+
+  return {
+    x: (rect.width * percentPosition.x) / 100,
+    y: (rect.height * percentPosition.y) / 100,
+  };
+}
+
+function getViewportExitPosition(startPoint, direction) {
+  const vector = directionVectors[direction] || directionVectors.N;
+  const animationAreaRect = animationArea.getBoundingClientRect();
+
+  // Koordinaten des sichtbaren Browserfensters relativ zur .image-wrap.
+  const viewportBounds = {
+    left: -animationAreaRect.left,
+    right: window.innerWidth - animationAreaRect.left,
+    top: -animationAreaRect.top,
+    bottom: window.innerHeight - animationAreaRect.top,
+  };
+
+  // Genug Abstand, damit das Flugzeug wirklich komplett aus dem Viewport fliegt.
+  const buffer = 180;
+
+  const possibleDistances = [];
+
+  if (vector.x > 0) {
+    possibleDistances.push(
+      (viewportBounds.right + buffer - startPoint.x) / vector.x,
+    );
   }
 
-  return getFallbackDestinationPosition(arrivalAirportCode);
+  if (vector.x < 0) {
+    possibleDistances.push(
+      (viewportBounds.left - buffer - startPoint.x) / vector.x,
+    );
+  }
+
+  if (vector.y > 0) {
+    possibleDistances.push(
+      (viewportBounds.bottom + buffer - startPoint.y) / vector.y,
+    );
+  }
+
+  if (vector.y < 0) {
+    possibleDistances.push(
+      (viewportBounds.top - buffer - startPoint.y) / vector.y,
+    );
+  }
+
+  const positiveDistances = possibleDistances.filter((distance) => {
+    return Number.isFinite(distance) && distance > 0;
+  });
+
+  const exitDistance =
+    positiveDistances.length > 0
+      ? Math.min(...positiveDistances)
+      : Math.max(window.innerWidth, window.innerHeight) + buffer;
+
+  return {
+    x: startPoint.x + vector.x * exitDistance,
+    y: startPoint.y + vector.y * exitDistance,
+  };
 }
 
-function getFallbackDestinationPosition(arrivalAirportCode) {
-  const fallbackPositions = [
-    { x: 50, y: -25 },
-    { x: 120, y: 20 },
-    { x: 125, y: 70 },
-    { x: 50, y: 125 },
-    { x: -25, y: 70 },
-    { x: -25, y: 20 },
-  ];
+function getPlaneRotationForDirection(direction) {
+  const vector = directionVectors[direction] || directionVectors.N;
 
-  const code = String(arrivalAirportCode || "UNKNOWN");
-
-  const hash = [...code].reduce((sum, character) => {
-    return sum + character.charCodeAt(0);
-  }, 0);
-
-  return fallbackPositions[hash % fallbackPositions.length];
-}
-
-function getPlaneRotation(startPosition, endPosition) {
-  const deltaX = endPosition.x - startPosition.x;
-  const deltaY = endPosition.y - startPosition.y;
-
-  const angleInRadians = Math.atan2(deltaY, deltaX);
+  const angleInRadians = Math.atan2(vector.y, vector.x);
   const angleInDegrees = angleInRadians * (180 / Math.PI);
 
   return angleInDegrees + planeImageRotationOffset;
@@ -473,8 +546,12 @@ function createPlaneForFlight(flight) {
   const plane = document.createElement("img");
 
   const startPosition = getDeparturePosition(flight);
-  const endPosition = getArrivalPosition(flight);
-  const rotation = getPlaneRotation(startPosition, endPosition);
+  const startPoint = getPositionInPixels(startPosition);
+
+  const direction = getDirectionForFlight(flight);
+  const endPoint = getViewportExitPosition(startPoint, direction);
+
+  const rotation = getPlaneRotationForDirection(direction);
 
   plane.src = planeTemplate.src;
   plane.alt = flight.callsign ? `Plane ${flight.callsign.trim()}` : "Plane";
@@ -486,22 +563,21 @@ function createPlaneForFlight(flight) {
     `${planeAnimationDurationMs}ms`,
   );
 
-  plane.style.setProperty("--start-x", `${startPosition.x}%`);
-  plane.style.setProperty("--start-y", `${startPosition.y}%`);
-  plane.style.setProperty("--end-x", `${endPosition.x}%`);
-  plane.style.setProperty("--end-y", `${endPosition.y}%`);
+  plane.style.setProperty("--start-x", `${startPoint.x}px`);
+  plane.style.setProperty("--start-y", `${startPoint.y}px`);
+  plane.style.setProperty("--end-x", `${endPoint.x}px`);
+  plane.style.setProperty("--end-y", `${endPoint.y}px`);
   plane.style.setProperty("--plane-rotation", `${rotation}deg`);
 
   plane.dataset.departureAirport = flight.departureAirport || "";
   plane.dataset.arrivalAirport = flight.estArrivalAirport || "";
+  plane.dataset.direction = direction;
   plane.dataset.firstSeen = flight.firstSeen || "";
   plane.dataset.callsign = flight.callsign || "";
 
   animationArea.appendChild(plane);
   activePlanes.add(plane);
 
-  // Neuer Teil:
-  // Sobald das Flugzeug sichtbar wird, erscheint auch der Eintrag im Board.
   const flightRow = addFlightToTable(flight);
 
   let alreadyRemoved = false;
@@ -516,7 +592,6 @@ function createPlaneForFlight(flight) {
     plane.remove();
     activePlanes.delete(plane);
 
-    // Sobald das Flugzeug verschwindet, verschwindet auch der Tabelleneintrag.
     removeFlightRow(flightRow);
   }
 
@@ -524,7 +599,6 @@ function createPlaneForFlight(flight) {
     once: true,
   });
 
-  // Sicherheits-Fallback, falls animationend nicht ausgelöst wird.
   const fallbackTimeoutId = setTimeout(
     removePlaneAndTableRow,
     planeAnimationDurationMs + 1000,
@@ -768,5 +842,3 @@ async function init() {
 }
 
 init();
-
-*/
