@@ -22,14 +22,11 @@ h2 {
   width: 100%;
   height: 100%;
   display: flex;
-  border: 0.2vw solid black;
 }
 
 /* Linke Spalte */
 .sidebar {
   max-width: 35%;
-  border-right: 0.2vw solid black;
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -38,7 +35,8 @@ h2 {
 
 /* Pixel Flight Board */
 .flight-board {
-  width: 70%;
+  width: 60%;
+  border-radius: 10px;
   min-height: 12%;
   background: #11191c;
   border: 0.35vw solid #aeb8bd;
@@ -65,23 +63,20 @@ h2 {
 
 .flight-board-header h2 {
   color: #ffc400;
-  font-size: clamp(1.2rem, 2vw, 2.2rem);
   letter-spacing: 0.12vw;
   text-shadow: 0.12vw 0.12vw 0 #7b5b00;
 }
 
 .plane-icon {
-  width: 2.4vw;
-  height: 2.4vw;
-  min-width: 28px;
-  min-height: 28px;
+  min-width: 2vw;
+  min-height: 2vw;
+  font-size: 1.5em;
 
   display: grid;
   place-items: center;
 
   background: #ffc400;
   color: #111;
-  font-size: clamp(1rem, 1.6vw, 1.8rem);
   box-shadow: inset -0.18vw -0.18vw 0 #d39200;
 }
 
@@ -93,6 +88,10 @@ h2 {
   border: 0.25vw solid #202b30;
 }
 
+tbody {
+  font-size: 1.2rem;
+}
+
 .flight-table thead {
   background: linear-gradient(#0f5aa4, #073e7b);
 }
@@ -100,7 +99,6 @@ h2 {
 .flight-table th {
   padding: 0.35vw 0.45vw;
   color: #d7eaff;
-  font-size: clamp(1rem, 1.25vw, 1.5rem);
   font-weight: normal;
   letter-spacing: 0.08vw;
   text-shadow: 0.08vw 0.08vw 0 #061f40;
@@ -108,7 +106,7 @@ h2 {
 
 .flight-table th:first-child,
 .flight-table td:first-child {
-  width: 35%;
+  width: 25%;
   border-right: 0.25vw solid #202b30;
   text-align: center;
 }
@@ -118,10 +116,7 @@ h2 {
 }
 
 .flight-table td {
-  padding: 0.3vw 0.5vw;
-
   color: #ffc400;
-  font-size: clamp(1.1rem, 1.6vw, 2rem);
   letter-spacing: 0.08vw;
   text-shadow: 0.1vw 0.1vw 0 #6b4b00;
 
@@ -136,7 +131,15 @@ h2 {
 
 .flight-table td:last-child {
   text-align: left;
-  padding-left: 1vw;
+}
+
+.destination-cell {
+  text-align: left;
+  padding-left: 2.5%;
+  overflow: hidden;
+}
+.destination-title-cell {
+  text-align: left;
 }
 
 /* Rechter Bereich */
@@ -154,7 +157,7 @@ h2 {
 .image-wrap {
   position: relative;
   display: inline-block;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .flight-plane {
@@ -199,8 +202,6 @@ h2 {
 /* Rotes Element */
 .red-box {
   height: 80%;
-  border: 0.3vw solid indianred;
-
   display: flex;
   flex-direction: column;
 }
@@ -217,24 +218,20 @@ h2 {
 .red-footer {
   height: 18%;
   width: 100%;
-  border-top: 0.3vw solid indianred;
-
   display: flex;
 }
 
 .red-footer-small {
-  width: 25%;
+  width: 20%;
   height: 100%;
-  border-right: 0.3vw solid indianred;
-
   display: flex;
-  justify-content: center;
+  justify-content: right;
   align-items: center;
 }
 
 .red-footer-small .button {
   max-width: 90%;
-  height: 90%;
+  height: 65%;
 }
 
 .red-footer-large {
@@ -248,16 +245,13 @@ h2 {
 
 .timeline {
   --orange: #ff9800;
-
-  --line-height: clamp(8px, 1vw, 14px);
-  --edge-width: clamp(18px, 1.5vw, 32px);
-  --small-width: clamp(8px, 0.8vw, 14px);
-
-  --edge-height: clamp(90px, 8vw, 150px);
-  --small-height: clamp(55px, 5vw, 90px);
-
+  --line-height: 1rem;
+  --edge-width: 4%;
+  --small-width: 2%;
+  --edge-height: 8vh;
+  --small-height: 6vh;
   position: relative;
-  width: 90%;
+  width: 85%;
   height: clamp(120px, 12vw, 220px);
   margin: 0 auto;
 }
@@ -271,6 +265,10 @@ h2 {
   height: var(--line-height);
   background: var(--orange);
   transform: translateY(-50%);
+  border-radius: 40px;
+  border: solid;
+  border-width: 3px;
+  border-color: #ff7702;
 }
 
 /* alle vertikalen Linien */
@@ -279,12 +277,20 @@ h2 {
   top: 50%;
   background: var(--orange);
   transform: translate(-50%, -50%);
+  border-radius: 40px;
+  border: solid;
+  border-width: 3px;
+  border-color: #ff7702;
 }
 
 /* große Randlinien */
 .bar-edge {
   width: var(--edge-width);
   height: var(--edge-height);
+  border-radius: 40px;
+  border: solid;
+  border-width: 5px;
+  border-color: #ff7702;
 }
 
 /* kurze Linien */
@@ -342,10 +348,10 @@ h2 {
 }
 
 /* MOBILE LAYOUT */
-@media (max-width: 1000px) {
+@media (max-width: 1450px) {
   :root {
-    --mobile-boards-height: 150px;
-    --mobile-footer-height: 130px;
+    --mobile-boards-height: 30vh;
+    --mobile-footer-height: 30vh;
   }
 
   html,
@@ -381,12 +387,11 @@ h2 {
     justify-content: space-evenly;
     align-items: flex-start;
 
-    gap: 8px;
     padding: 18px 8px 8px;
   }
 
   .flight-board {
-    width: 25%;
+    width: 31%;
     min-height: 0;
 
     padding: 3px;
@@ -430,8 +435,9 @@ h2 {
   }
 
   .flight-table td {
-    font-size: 0.85rem;
     padding: 1px 3px;
+    overflow: hidden;
+    font-size: 0.8rem;
   }
 
   .flight-table th:first-child,
@@ -513,7 +519,7 @@ h2 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 18px;
+    gap: 15%;
   }
 
   .red-footer-small {
@@ -527,7 +533,7 @@ h2 {
   }
 
   .red-footer-small .button {
-    max-width: 20%;
+    max-width: 70px;
     height: auto;
   }
 
@@ -539,24 +545,4 @@ h2 {
     justify-content: center;
     align-items: center;
   }
-}
-
-/*
-.timeline {
-    width: 82%;
-    height: 8px;
-    background-color: #ff9500;
-  }
-
-  */
-
-* {
-  font-size: 14px;
-  line-height: 1;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-tr {
-  padding: 0px;
 }

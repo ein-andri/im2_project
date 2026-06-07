@@ -8,6 +8,8 @@
 // x und y sind Prozentwerte innerhalb deiner Schweiz-Karte / .image-wrap.
 // tableBodySelector bestimmt, in welches Board die Flüge geschrieben werden.
 
+/*
+
 const departureAirports = [
   {
     code: "LSZH",
@@ -643,7 +645,12 @@ function startBodyColorAnimation() {
     bodyColorAnimation.cancel();
   }
 
-  const { darkUntilOffset, lightUntilOffset } = getBodyColorOffsets();
+  const total =
+    bodyColorStartPercent + bodyColorMiddlePercent + bodyColorEndPercent;
+
+  const lightFromOffset = bodyColorStartPercent / total;
+  const darkFromOffset =
+    (bodyColorStartPercent + bodyColorMiddlePercent) / total;
 
   document.body.style.backgroundColor = bodyBackgroundDarkColor;
 
@@ -652,15 +659,15 @@ function startBodyColorAnimation() {
       {
         backgroundColor: bodyBackgroundDarkColor,
         offset: 0,
-      },
-      {
-        backgroundColor: bodyBackgroundDarkColor,
-        offset: darkUntilOffset,
         easing: bodyColorEasing,
       },
       {
         backgroundColor: bodyBackgroundIdleColor,
-        offset: lightUntilOffset,
+        offset: lightFromOffset,
+      },
+      {
+        backgroundColor: bodyBackgroundIdleColor,
+        offset: darkFromOffset,
         easing: bodyColorEasing,
       },
       {
@@ -761,3 +768,5 @@ async function init() {
 }
 
 init();
+
+*/
