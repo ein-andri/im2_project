@@ -24,7 +24,6 @@ h2 {
   display: flex;
 }
 
-/* Linke Spalte */
 .sidebar {
   max-width: 35%;
   display: flex;
@@ -33,7 +32,6 @@ h2 {
   justify-content: space-around;
 }
 
-/* Pixel Flight Board */
 .flight-board {
   width: 60%;
   border-radius: 10px;
@@ -142,7 +140,6 @@ tbody {
   text-align: left;
 }
 
-/* Rechter Bereich */
 .content {
   display: flex;
   justify-content: center;
@@ -199,29 +196,28 @@ tbody {
   display: block;
 }
 
-/* Rotes Element */
-.red-box {
+.box {
   height: 80%;
   display: flex;
   flex-direction: column;
 }
 
-.red-box img {
+.box img {
   max-height: 100%;
 }
 
-.red-content {
+.map-content {
   height: 82%;
   width: 100%;
 }
 
-.red-footer {
+.footer {
   height: 18%;
   width: 100%;
   display: flex;
 }
 
-.red-footer-small {
+.footer-small {
   width: 20%;
   height: 100%;
   display: flex;
@@ -229,12 +225,12 @@ tbody {
   align-items: center;
 }
 
-.red-footer-small .button {
+.footer-small .button {
   max-width: 90%;
   height: 65%;
 }
 
-.red-footer-large {
+.footer-large {
   width: 75%;
   height: 100%;
 
@@ -256,7 +252,6 @@ tbody {
   margin: 0 auto;
 }
 
-/* horizontale Linie */
 .timeline-line {
   position: absolute;
   left: calc(var(--edge-width) / 2);
@@ -271,7 +266,6 @@ tbody {
   border-color: #ff7702;
 }
 
-/* alle vertikalen Linien */
 .bar {
   position: absolute;
   top: 50%;
@@ -283,7 +277,6 @@ tbody {
   border-color: #ff7702;
 }
 
-/* große Randlinien */
 .bar-edge {
   width: var(--edge-width);
   height: var(--edge-height);
@@ -293,13 +286,11 @@ tbody {
   border-color: #ff7702;
 }
 
-/* kurze Linien */
 .bar-small {
   width: var(--small-width);
   height: var(--small-height);
 }
 
-/* Positionen */
 .bar-left {
   left: 0;
   transform: translateY(-50%);
@@ -347,7 +338,6 @@ tbody {
   will-change: left;
 }
 
-/* MOBILE LAYOUT */
 @media (max-width: 1450px) {
   :root {
     --mobile-boards-height: 30vh;
@@ -369,7 +359,6 @@ tbody {
     overflow: hidden;
   }
 
-  /* Flight boards fixed at the top */
   .sidebar {
     position: fixed;
     top: 0;
@@ -450,7 +439,6 @@ tbody {
     border-top-width: 2px;
   }
 
-  /* This becomes the touch-scroll area */
   .content {
     position: fixed;
     inset: 0;
@@ -465,8 +453,7 @@ tbody {
     touch-action: pan-x pan-y;
   }
 
-  /* Remove the desktop red layout constraints */
-  .red-box {
+  .box {
     width: max-content;
     height: auto;
     min-height: calc(100dvh + 250px);
@@ -476,7 +463,7 @@ tbody {
     display: block;
   }
 
-  .red-content {
+  .map-content {
     width: max-content;
     height: auto;
     overflow: visible;
@@ -487,7 +474,6 @@ tbody {
     overflow: visible;
   }
 
-  /* Make the map wider than the screen */
   #switzerland {
     display: block;
 
@@ -502,8 +488,7 @@ tbody {
     max-width: none;
   }
 
-  /* Optional: keep button/timeline fixed at bottom on mobile */
-  .red-footer {
+  .footer {
     position: fixed;
     left: 0;
     right: 0;
@@ -522,7 +507,7 @@ tbody {
     gap: 15%;
   }
 
-  .red-footer-small {
+  .footer-small {
     width: 100%;
     height: 55px;
     border-right: none;
@@ -532,12 +517,12 @@ tbody {
     align-items: center;
   }
 
-  .red-footer-small .button {
+  .footer-small .button {
     max-width: 70px;
     height: auto;
   }
 
-  .red-footer-large {
+  .footer-large {
     width: 100%;
     height: 35px;
 
