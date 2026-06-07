@@ -63,7 +63,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 }
 
 echo json_encode([
-    "airport" => "LSZR",
+    "airport" => "LSGG",
     "httpCode" => $httpCode,
     "flights" => $decoded,
 ]);
