@@ -1,14 +1,7 @@
-// script.js
-
 // ------------------------------------------------------
-// 1. Einstellungen
-// ------------------------------------------------------
-
-// Flughäfen, von denen deine APIs Flüge liefern.
-// x und y sind Prozentwerte innerhalb deiner Schweiz-Karte / .image-wrap.
-// tableBodySelector bestimmt, in welches Board die Flüge geschrieben werden.
-
 // Lädt Himmelsrichtungsdaten für Ankunftsflughäfen
+// ------------------------------------------------------
+
 async function loadAirportCodes() {
   try {
     const file = "./json/airport-codes.json";
@@ -48,30 +41,24 @@ const departureAirports = [
     code: "LSZH",
     name: "Zürich",
     url: "../api/get_all_flights1.php",
-    position: { x: 62, y: 30 }, // stimmt bereits
+    position: { x: 62, y: 30 },
     tableBodySelector: "#flight-table-body-1",
   },
   {
     code: "LSZB",
     name: "Bern-Belp",
     url: "../api/get_all_flights2.php",
-    position: { x: 46, y: 37 }, // Bern auf der neuen Karte
+    position: { x: 46, y: 37 },
     tableBodySelector: "#flight-table-body-2",
   },
   {
     code: "LSGG",
     name: "Genf",
     url: "../api/get_all_flights3.php",
-    position: { x: 15, y: 55 }, // Genf auf der neuen Karte
+    position: { x: 15, y: 55 },
     tableBodySelector: "#flight-table-body-3",
   },
 ];
-
-// Falls du gewisse Zielflughäfen komplett ignorieren willst:
-const excludedArrivalAirports = new Set([
-  // "LSZH",
-  // "LSZR",
-]);
 
 const recapDurationMs = 120_000;
 const planeAnimationDurationMs = 20_000;
@@ -80,20 +67,17 @@ const maxFlightRowsPerTable = 4;
 const bodyBackgroundIdleColor = "#33aad1";
 const bodyBackgroundDarkColor = "#15718F";
 
-// Diese drei Werte kannst du frei ändern.
-// Sie müssen nicht zwingend 100 ergeben, werden unten automatisch normalisiert.
+// Dauer, wie lange Hintergrund hell und dunkel ist
 const bodyColorStartPercent = 10;
 const bodyColorMiddlePercent = 80;
 const bodyColorEndPercent = 10;
 
 const bodyColorEasing = "ease-in";
 
-// Falls dein Flugzeugbild falsch herum schaut, ändere diesen Wert.
-// Gute Testwerte sind: 0, 90, -90 oder 180.
 const planeImageRotationOffset = 90;
 
 // ------------------------------------------------------
-// 2. HTML-Elemente holen
+// HTML-Elemente holen
 // ------------------------------------------------------
 
 const animationButton = document.getElementById("animation-button");
@@ -103,7 +87,7 @@ const animationArea = document.querySelector(".image-wrap");
 const timelineProgress = document.getElementById("timeline-progress");
 
 // ------------------------------------------------------
-// 3. Aktive Animation merken
+// Aktive Animation merken
 // ------------------------------------------------------
 
 let sortedFlights = [];
@@ -115,7 +99,7 @@ let timelineProgressAnimation = null;
 let bodyColorAnimation = null;
 
 // ------------------------------------------------------
-// 4. Daten laden
+// Daten laden
 // ------------------------------------------------------
 
 async function loadData(url) {
@@ -139,8 +123,6 @@ async function loadFlightsFromDepartureAirports() {
           return {
             ...flight,
 
-            // Wichtig:
-            // Damit weiß jedes Flugzeug später, von welchem Flughafen es starten soll.
             departureAirport: flight.estDepartureAirport || airport.code,
           };
         });
@@ -178,7 +160,7 @@ async function initializeFlights() {
 }
 
 // ------------------------------------------------------
-// 5. Tabellen vorbereiten und aktualisieren
+// Tabellen vorbereiten und aktualisieren
 // ------------------------------------------------------
 
 function getTableBodyForDepartureAirport(departureAirportCode) {
@@ -199,7 +181,7 @@ function createEmptyFlightTableRow() {
   const timeCell = document.createElement("td");
   const destinationCell = document.createElement("td");
 
-  // &nbsp; sorgt dafür, dass die Zeile optisch Höhe behält.
+  // sorgt dafür, dass die Zeile optisch Höhe behält
   timeCell.textContent = "\u00A0";
   destinationCell.textContent = "\u00A0";
 
@@ -214,20 +196,18 @@ function getActiveRowsFromTable(tableBody) {
 }
 
 function normalizeFlightTable(tableBody) {
-  // Zuerst alle leeren Platzhalter-Zeilen entfernen.
+  // Zuerst alle leeren Platzhalter-Zeilen entfernen
   tableBody
     .querySelectorAll("tr[data-empty-row='true']")
     .forEach((row) => row.remove());
 
   let activeRows = getActiveRowsFromTable(tableBody);
 
-  // Aktive Flüge nach Zeit sortieren.
+  // Aktive Flüge nach Zeit sortieren
   activeRows.sort((a, b) => {
     return Number(a.dataset.timestamp) - Number(b.dataset.timestamp);
   });
 
-  // Falls mehr als 4 aktive Flüge vorhanden sind:
-  // älteste löschen, neueste behalten.
   while (activeRows.length > maxFlightRowsPerTable) {
     const oldestRow = activeRows.shift();
 
@@ -235,12 +215,12 @@ function normalizeFlightTable(tableBody) {
     activeFlightRows.delete(oldestRow);
   }
 
-  // Sortierte aktive Zeilen wieder in die Tabelle einsetzen.
+  // Sortierte aktive Zeilen wieder in die Tabelle einsetzen
   activeRows.forEach((row) => {
     tableBody.appendChild(row);
   });
 
-  // Mit leeren Zeilen auffüllen, bis immer 4 Zeilen sichtbar sind.
+  // Mit leeren Zeilen auffüllen, bis immer 4 Zeilen sichtbar sind
   while (tableBody.children.length < maxFlightRowsPerTable) {
     tableBody.appendChild(createEmptyFlightTableRow());
   }
@@ -347,7 +327,7 @@ function removeFlightRow(row) {
 }
 
 // ------------------------------------------------------
-// 6. Animation zurücksetzen
+// Animation zurücksetzen
 // ------------------------------------------------------
 
 function clearCurrentAnimation() {
@@ -365,7 +345,7 @@ function clearCurrentAnimation() {
 }
 
 // ------------------------------------------------------
-// 7. Zeitstempel der Flüge
+// Zeitstempel der Flüge
 // ------------------------------------------------------
 
 function getFlightTimestamp(flight) {
@@ -409,7 +389,7 @@ function getScheduledFlights(flights) {
 }
 
 // ------------------------------------------------------
-// 8. Start- und Zielposition bestimmen
+// Start- und Zielposition bestimmen
 // ------------------------------------------------------
 
 function getDepartureAirportConfig(departureAirportCode) {
@@ -472,7 +452,7 @@ function getViewportExitPosition(startPoint, direction) {
   const vector = directionVectors[direction] || directionVectors.N;
   const animationAreaRect = animationArea.getBoundingClientRect();
 
-  // Koordinaten des sichtbaren Browserfensters relativ zur .image-wrap.
+  // Koordinaten des sichtbaren Browserfensters relativ zur .image-wrap
   const viewportBounds = {
     left: -animationAreaRect.left,
     right: window.innerWidth - animationAreaRect.left,
@@ -480,7 +460,7 @@ function getViewportExitPosition(startPoint, direction) {
     bottom: window.innerHeight - animationAreaRect.top,
   };
 
-  // Genug Abstand, damit das Flugzeug wirklich komplett aus dem Viewport fliegt.
+  // Genug Abstand, damit das Flugzeug wirklich komplett aus dem Viewport fliegt
   const buffer = 180;
 
   const possibleDistances = [];
@@ -534,7 +514,7 @@ function getPlaneRotationForDirection(direction) {
 }
 
 // ------------------------------------------------------
-// 9. Flugzeug erzeugen
+// Flugzeug erzeugen
 // ------------------------------------------------------
 
 function createPlaneForFlight(flight) {
@@ -771,7 +751,7 @@ function startRecapVisualAnimations() {
 }
 
 // ------------------------------------------------------
-// 10. Flug-Rekap starten
+// Flug-Recap starten
 // ------------------------------------------------------
 
 function startFlightRecap() {
@@ -786,7 +766,6 @@ function startFlightRecap() {
 
   animationButton.disabled = true;
 
-  // Das hat bei dir gefehlt:
   startRecapVisualAnimations();
 
   scheduledFlights.forEach(({ flight, delay }) => {
@@ -811,7 +790,7 @@ function startFlightRecap() {
 }
 
 // ------------------------------------------------------
-// 11. Seite initialisieren
+// Seite initialisieren
 // ------------------------------------------------------
 
 async function init() {
@@ -832,7 +811,7 @@ async function init() {
 
   animationButton.disabled = true;
 
-  // Entfernt die statischen Beispiel-Zeilen aus deinem HTML.
+  // Entfernt die statischen Beispiel-Zeilen aus dem HTML
   clearAllFlightTables();
 
   await initializeFlights();
